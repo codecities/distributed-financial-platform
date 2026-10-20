@@ -2,6 +2,7 @@ package com.dfp.accounts.api;
 
 import com.dfp.accounts.application.AccountService;
 import com.dfp.accounts.domain.Account;
+import com.dfp.accounts.domain.Currency;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,15 +28,17 @@ public class AccountController {
     public ResponseEntity<AccountResponse> createAccount(
             @RequestBody CreateAccountRequest request
     ) {
+        Currency currency = Currency.valueOf(request.currency());
+
         Account account = accountService.createAccount(
                 request.customerId(),
-                request.currency()
+                currency
         );
 
         AccountResponse response = new AccountResponse(
                 account.getId(),
                 account.getCustomerId(),
-                account.getCurrency(),
+                account.getCurrency().name(),
                 account.getStatus(),
                 account.getCreatedAt()
         );

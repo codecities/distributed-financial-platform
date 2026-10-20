@@ -3,6 +3,7 @@ package com.dfp.accounts.domain;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -15,8 +16,9 @@ public class Account {
     @Column(name = "customer_id", nullable = false)
     private UUID customerId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 3)
-    private String currency;
+    private Currency currency;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -30,11 +32,19 @@ public class Account {
 
     public Account(
             UUID customerId,
-            String currency
+            Currency currency
     ) {
+        this.customerId = Objects.requireNonNull(
+                customerId,
+                "customerId is required"
+        );
+
+        this.currency = Objects.requireNonNull(
+                currency,
+                "currency is required"
+        );
+
         this.id = UUID.randomUUID();
-        this.customerId = customerId;
-        this.currency = currency;
         this.status = AccountStatus.ACTIVE;
         this.createdAt = Instant.now();
     }
@@ -47,7 +57,7 @@ public class Account {
         return customerId;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
