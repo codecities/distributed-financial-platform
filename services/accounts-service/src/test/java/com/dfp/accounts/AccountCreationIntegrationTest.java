@@ -96,4 +96,77 @@ public class AccountCreationIntegrationTest {
 
         org.junit.jupiter.api.Assertions.assertEquals(1, count);
     }
+
+    @Test
+    void shouldRejectUnsupportedCurrency() {
+
+        // Given
+        UUID customerId = UUID.randomUUID();
+
+        Map<String, Object> request = Map.of(
+                "customerId", customerId.toString(),
+                "currency", "EUR"
+        );
+
+        // When
+        var response = given()
+                .port(port)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .when()
+                .post("/api/v1/accounts");
+
+        // Then
+        response.then()
+                .statusCode(422)
+                .contentType("application/problem+json")
+                .body("status", equalTo(422))
+                .body("title", equalTo("Unprocessable Content"))
+                .body("detail", equalTo("Unsupported currency: EUR"));
+    }
+
+
+    @Test
+    void shouldRejectMissingCustomerId() {
+
+        // Given
+        Map<String, Object> request = Map.of(
+                "currency", "COP"
+        );
+
+        // When
+        var response = given()
+                .port(port)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .when()
+                .post("/api/v1/accounts");
+
+        // Then
+        response.then()
+                .statusCode(400);
+    }
+
+    @Test
+    void shouldRejectMissingCurrency() {
+
+        UUID customerId = UUID.randomUUID();
+
+        // Given
+        Map<String, Object> request = Map.of(
+                "customerId", customerId
+        );
+
+        // When
+        var response = given()
+                .port(port)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .when()
+                .post("/api/v1/accounts");
+
+        // Then
+        response.then()
+                .statusCode(400);
+    }
 }
