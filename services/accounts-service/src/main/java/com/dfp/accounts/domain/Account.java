@@ -1,5 +1,6 @@
 package com.dfp.accounts.domain;
 
+import com.dfp.accounts.domain.exception.InvalidAccountStateException;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -47,6 +48,16 @@ public class Account {
         this.id = UUID.randomUUID();
         this.status = AccountStatus.ACTIVE;
         this.createdAt = Instant.now();
+    }
+
+    public void suspend() {
+        if (this.status != AccountStatus.ACTIVE) {
+            throw new InvalidAccountStateException(
+                    "Only active accounts can be suspended"
+            );
+        }
+
+        this.status = AccountStatus.SUSPENDED;
     }
 
     public UUID getId() {

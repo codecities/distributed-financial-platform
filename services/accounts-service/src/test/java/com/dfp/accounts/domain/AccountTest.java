@@ -1,5 +1,6 @@
 package com.dfp.accounts.domain;
 
+import com.dfp.accounts.domain.exception.InvalidAccountStateException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -76,5 +77,26 @@ public class AccountTest {
                 () -> assertNotEquals(account1.getId(), account2.getId())
         );
         assertNotEquals(account1.getId(), account2.getId());
+    }
+
+    @Test
+    void shouldSuspendActiveAccount() {
+        // Given
+        Account account = new Account(
+                UUID.randomUUID(),
+                Currency.COP
+        );
+
+        account.suspend();
+
+        assertThrows(
+                InvalidAccountStateException.class,
+                account::suspend
+        );
+
+        assertEquals(
+                AccountStatus.SUSPENDED,
+                account.getStatus()
+        );
     }
 }
