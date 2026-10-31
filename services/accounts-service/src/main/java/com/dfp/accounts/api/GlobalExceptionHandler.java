@@ -3,8 +3,10 @@ package com.dfp.accounts.api;
 import com.dfp.accounts.application.exception.AccountNotFoundException;
 import com.dfp.accounts.domain.exception.InvalidAccountStateException;
 import com.dfp.accounts.domain.exception.UnsupportedCurrencyException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -52,5 +54,19 @@ public class GlobalExceptionHandler {
         problem.setDetail(exception.getMessage());
 
         return problem;
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ProblemDetail> handleOptimisticLockingFailure(
+            OptimisticLockingFailureException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "Account was modified by another transaction"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(problem);
     }
 }
