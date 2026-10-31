@@ -28,6 +28,10 @@ public class Account {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     protected Account() {
     }
 
@@ -78,5 +82,9 @@ public class Account {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 }
