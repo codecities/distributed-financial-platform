@@ -1,24 +1,45 @@
 package com.dfp.accounts.domain;
 
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+@Entity
+@Table(name = "account_movements")
 public class AccountMovement {
 
+    @Id
     private UUID id;
 
+    @Column(name = "account_id", nullable = false)
     private UUID accountId;
 
+    @Column(name = "operation_id", nullable = false, unique = true)
     private UUID operationId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type",  nullable = false)
     private MovementType type;
 
+    @Column(
+            name = "amount",
+            nullable = false,
+            precision = 19,
+            scale = 2
+    )
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "currency", nullable = false)
     private Currency currency;
 
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    public AccountMovement() {
+    }
 
     public AccountMovement(
             UUID id,
