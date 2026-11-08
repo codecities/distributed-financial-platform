@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.Container;
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Testcontainers
@@ -88,6 +90,56 @@ public class AccountCreditTransactionIntegrationTest {
             );
 
             assertEquals(1L, account.getVersion());
+        });
+    }
+
+    @Test
+    void shouldRollbackCreditWhenMovementPersistenceFails() {
+
+        UUID accountId = accountRepository.saveAndFlush(
+                new Account(UUID.randomUUID(), Currency.COP)
+        ).getId();
+
+        UUID operationId = UUID.randomUUID();
+
+        // Firsts operation: successfully
+        accountService.creditAccount(
+                accountId,
+                operationId,
+                new BigDecimal("100000.00")
+        );
+
+        // Second operation: reuse the same operationId
+        assertThrows(
+                DataIntegrityViolationException.class,
+                () -> accountService.creditAccount(
+                        accountId,
+                        operationId,
+                        new BigDecimal("50000.00")
+                )
+        );
+
+        // Check status saved after exception
+        TransactionTemplate transaction =
+                new TransactionTemplate(transactionManager);
+
+        transaction.executeWithoutResult(status -> {
+            Account account = accountRepository
+                    .findById(accountId)
+                    .orElseThrow();
+
+            assertEquals(
+                    0,
+                    new BigDecimal("100000.00")
+                            .compareTo(account.getBalance())
+            );
+
+            assertEquals(1L, account.getVersion());
+
+            assertEquals(
+                    1L,
+                    accountMovementRepository.countByAccountId(accountId)
+            );
         });
     }
 }

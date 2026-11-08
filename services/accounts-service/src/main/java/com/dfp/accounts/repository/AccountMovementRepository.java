@@ -9,5 +9,7 @@ import java.util.UUID;
 public interface AccountMovementRepository
         extends JpaRepository<AccountMovement, UUID> {
 
+    long countByAccountId(UUID accountId);
+
     Optional<AccountMovement> findByOperationId(UUID operationId);
 }
