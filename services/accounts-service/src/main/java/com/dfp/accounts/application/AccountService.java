@@ -4,6 +4,8 @@ import com.dfp.accounts.application.exception.AccountNotFoundException;
 import com.dfp.accounts.domain.Account;
 import com.dfp.accounts.domain.AccountMovement;
 import com.dfp.accounts.domain.Currency;
+import com.dfp.accounts.domain.MovementType;
+import com.dfp.accounts.domain.exception.DuplicateOperationException;
 import com.dfp.accounts.repository.AccountMovementRepository;
 import com.dfp.accounts.repository.AccountRepository;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,26 @@ public class AccountService {
             UUID operationId,
             BigDecimal amount
     ) {
+        var existingMovement =
+                movementRepository.findByOperationId(operationId);
+
+        if (existingMovement.isPresent()) {
+            AccountMovement movement = existingMovement.get();
+
+            boolean sameOperation =
+                    movement.getAccountId().equals(accountId)
+                    && movement.getAmount().compareTo(amount) == 0
+                    && movement.getType() == MovementType.CREDIT;
+
+            if (!sameOperation) {
+                throw new DuplicateOperationException(
+                        "Operation ID already used with different data"
+                );
+            }
+
+            return;
+        }
+
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found" + accountId));
 
